@@ -71,6 +71,16 @@ func (p *PositiveInteger16) ValueAsUint16() uint16 {
 	return uint16(p.V)
 }
 
+// ValueAsUint32 return value as uint32
+func (p *PositiveInteger16) ValueAsUint32() uint32 {
+	return uint32(p.V)
+}
+
+// ValueAsUint64 return value as uint64
+func (p *PositiveInteger16) ValueAsUint64() uint64 {
+	return uint64(p.V)
+}
+
 // NewPositiveInteger32 returns a positive integer (32 bits) instance
 func NewPositiveInteger32(value uint32) *PositiveInteger32 {
 	return &PositiveInteger32{
@@ -83,11 +93,21 @@ func (p *PositiveInteger32) ValueAsUint32() uint32 {
 	return uint32(p.V)
 }
 
+// ValueAsUint64 return value as uint64
+func (p *PositiveInteger32) ValueAsUint64() uint64 {
+	return uint64(p.V)
+}
+
 // NewPositiveInteger64 returns a positive integer (64 bits) instance
 func NewPositiveInteger64(value uint64) *PositiveInteger64 {
 	return &PositiveInteger64{
 		basePositiveInteger: newBasePositiveInteger(uint64(value), additionalType64Bits),
 	}
+}
+
+// ValueAsUint64 return value as uint64
+func (p *PositiveInteger64) ValueAsUint64() uint64 {
+	return uint64(p.V)
 }
 
 // NewPositiveInteger returns a positive integer using the most compact

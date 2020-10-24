@@ -89,6 +89,9 @@ func TestArray(t *testing.T) {
 		}
 
 		assert.Equal(t, testCase.input, c[0].(*Array).doEncodeCBOR(testCase.fixedLength))
+		if c[0].(*Array).Length() > 0 {
+			assert.True(t, len(c[0].(*Array).ValuesAsString()) > 0)
+		}
 	}
 }
 

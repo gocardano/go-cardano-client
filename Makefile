@@ -33,6 +33,10 @@ coverage:
 		-v `pwd`:/go/src/${PROJECT_SRCDIR} \
 		-w /go/src/${PROJECT_SRCDIR} ${GOLANG_IMAGE} go test -coverprofile=.cov ./...;  go tool cover -func .cov
 
+coverage-html:
+	@go test -coverprofile=.cov ./...;  go tool cover -func .cov
+	@go tool cover -html=.cov
+
 build:
 	@echo ➭ Building ${PROJECT_NAME}
 	@docker run "${DOCKER_ARGS}" \
