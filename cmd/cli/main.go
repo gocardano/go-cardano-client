@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/masterjk/go-cardano-client/shelley"
+	"github.com/gocardano/go-cardano-client/shelley"
 	log "github.com/sirupsen/logrus"
 )
 

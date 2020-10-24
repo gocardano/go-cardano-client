@@ -1,7 +1,7 @@
 package cbor
 
 import (
-	"github.com/masterjk/go-cardano-client/errors"
+	"github.com/gocardano/go-cardano-client/errors"
 )
 
 const (
