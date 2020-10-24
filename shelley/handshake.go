@@ -37,9 +37,9 @@ package shelley
 import (
 	"fmt"
 
-	"github.com/masterjk/go-cardano-client/cbor"
-	"github.com/masterjk/go-cardano-client/errors"
-	"github.com/masterjk/go-cardano-client/multiplex"
+	"github.com/gocardano/go-cardano-client/cbor"
+	"github.com/gocardano/go-cardano-client/errors"
+	"github.com/gocardano/go-cardano-client/multiplex"
 
 	log "github.com/sirupsen/logrus"
 )

@@ -4,9 +4,9 @@ import (
 	"net"
 	"time"
 
-	"github.com/masterjk/go-cardano-client/errors"
-	"github.com/masterjk/go-cardano-client/multiplex"
-	"github.com/masterjk/go-cardano-client/utils"
+	"github.com/gocardano/go-cardano-client/errors"
+	"github.com/gocardano/go-cardano-client/multiplex"
+	"github.com/gocardano/go-cardano-client/utils"
 
 	log "github.com/sirupsen/logrus"
 )

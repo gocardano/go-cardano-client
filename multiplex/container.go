@@ -33,9 +33,9 @@ package multiplex
 import (
 	"math"
 
-	"github.com/masterjk/go-cardano-client/cbor"
-	"github.com/masterjk/go-cardano-client/errors"
-	"github.com/masterjk/go-cardano-client/utils"
+	"github.com/gocardano/go-cardano-client/cbor"
+	"github.com/gocardano/go-cardano-client/errors"
+	"github.com/gocardano/go-cardano-client/utils"
 
 	log "github.com/sirupsen/logrus"
 )

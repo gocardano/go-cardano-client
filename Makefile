@@ -1,5 +1,5 @@
 PROJECT_NAME=go-cardano-client
-PROJECT_SRCDIR=github.com/masterjk/${PROJECT_NAME}
+PROJECT_SRCDIR=github.com/gocardano/${PROJECT_NAME}
 
 VERSION="0.0.1-$(shell git rev-parse --short=8 HEAD)"
 DOCKER_ARGS="--rm -u $(shell id -u) -e GOCACHE=/tmp/"
@@ -44,4 +44,4 @@ build:
 		-w /go/src/${PROJECT_SRCDIR} ${GOLANG_IMAGE} go build \
 			-o ${PROJECT_NAME} \
 			-ldflags "-X main.version=${VERSION}" \
-			github.com/masterjk/go-cardano-client/cmd/cli
+			github.com/gocardano/go-cardano-client/cmd/cli

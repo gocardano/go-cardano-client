@@ -1,4 +1,4 @@
-module github.com/masterjk/go-cardano-client
+module github.com/gocardano/go-cardano-client
 
 go 1.15
 

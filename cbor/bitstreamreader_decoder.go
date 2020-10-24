@@ -4,7 +4,7 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/masterjk/go-cardano-client/errors"
+	"github.com/gocardano/go-cardano-client/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/x448/float16"
 )
