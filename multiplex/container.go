@@ -58,14 +58,6 @@ func NewContainer(miniProtocol MiniProtocol, containerMode ContainerMode, array 
 	}
 }
 
-// NewContainerMuxControl returns a new container for mux control
-func NewContainerMuxControl(containerMode ContainerMode, array *cbor.Array) *Container {
-	return &Container{
-		header:    NewHeader(MiniProtocolIDMuxControl, containerMode, 0),
-		dataItems: []cbor.DataItem{array},
-	}
-}
-
 // DataItems returns the dataItems associated with this container
 func (c *Container) DataItems() []cbor.DataItem {
 	return c.dataItems

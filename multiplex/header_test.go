@@ -13,12 +13,22 @@ func TestNewHeader(t *testing.T) {
 	assert.Equal(t, uint16(1), h.miniProtocol.Value())
 	assert.Equal(t, ContainerModeInitiator, h.ContainerMode())
 	assert.Equal(t, uint16(2), h.payloadLength)
+	assert.Equal(t, h.IsFromInitiator(), true)
+	assert.Equal(t, h.IsFromResponder(), false)
+	assert.True(t, len(h.String()) > 0)
 
 	h = NewHeader(miniProtocolFromBytes(0x01), ContainerModeResponder, 2)
 	assert.True(t, h.transmissionTime > 0)
 	assert.Equal(t, uint16(1), h.miniProtocol.Value())
 	assert.Equal(t, ContainerModeResponder, h.ContainerMode())
 	assert.Equal(t, uint16(2), h.payloadLength)
+	assert.Equal(t, h.IsFromInitiator(), false)
+	assert.Equal(t, h.IsFromResponder(), true)
+	assert.True(t, len(h.String()) > 0)
+
+	// Test update payload length
+	h.update(uint16(88))
+	assert.Equal(t, uint16(88), h.payloadLength)
 }
 
 func TestNewMessageHeaderFromBytes(t *testing.T) {
