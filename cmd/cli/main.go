@@ -20,8 +20,14 @@ func main() {
 
 	socketFilename := flag.String("socket", "", "Socket filename")
 	debug := flag.Bool("debug", false, "Enable debug/trace level logging")
+	showVersion := flag.Bool("version", false, "Display version information")
 
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Printf("go-cardano-client version: %s\n", version)
+		os.Exit(0)
+	}
 
 	if *socketFilename == "" {
 		flag.Usage()

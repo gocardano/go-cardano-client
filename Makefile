@@ -1,7 +1,7 @@
 PROJECT_NAME=go-cardano-client
 PROJECT_SRCDIR=github.com/masterjk/${PROJECT_NAME}
 
-APP_VERSION="0.0.1-$(shell git rev-parse --short=8 HEAD)"
+VERSION="0.0.1-$(shell git rev-parse --short=8 HEAD)"
 DOCKER_ARGS="--rm -u $(shell id -u) -e GOCACHE=/tmp/"
 
 GOLANG_IMAGE="golang:1.15.2"
