@@ -1,4 +1,7 @@
 
+![Build](https://github.com/gocardano/go-cardano-client/workflows/Build/badge.svg?branch=master)
+[![Coverage](https://coveralls.io/repos/github/gocardano/go-cardano-client/badge.svg?branch=master)](https://coveralls.io/github/gocardano/go-cardano-client?branch=master)
+
 # go-cardano-client
 
 _WORK IN PROGRESS_
