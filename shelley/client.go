@@ -2,6 +2,7 @@ package shelley
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/gocardano/go-cardano-client/cbor"
 	"github.com/gocardano/go-cardano-client/errors"
@@ -63,9 +64,15 @@ func (c *Client) Handshake() error {
 // QueryTip returns the block header hash (slotNumber, string, blockNumber, error)
 func (c *Client) QueryTip() (uint32, []byte, uint32, error) {
 
+	// Step 1: Send the chain sync request object
 	chainSyncRequest := cbor.NewArray()
-	chainSyncRequest.Add(cbor.NewPositiveInteger(0))
+	chainSyncRequest.Add(cbor.NewPositiveInteger(0)) // msgRequestNext
+	containerResponse, err := c.queryNode(multiplex.MiniProtocolIDChainSyncBlocks, chainSyncRequest)
+	if err != nil {
+		log.WithError(err).Error("Error parsing block fetch response from node")
+	}
 
+	// Step 2: Parse the response
 	// Response Format:
 	// Array: [3]
 	//   PositiveInteger8(3)
@@ -76,17 +83,20 @@ func (c *Client) QueryTip() (uint32, []byte, uint32, error) {
 	// 	     ByteString - Length: [32]; Value: [95a417047d3660f2dbd0d70f21b46d7348e9dd0b0e0156ca368cca2d54bcb61b];
 	//     PositiveInteger32(4857537)     // blockNumber
 
-	containerResponse, err := c.queryNode(multiplex.MiniProtocolIDChainSyncBlocks, chainSyncRequest)
-	if err != nil {
-		log.WithError(err).Error("Error parsing block fetch response from node")
-	}
-
 	arr := containerResponse.DataItems()[0].(*cbor.Array)
-	// arr.Get(0).(*cbor.PositiveInteger8).ValueAsUint8()) : blockFetch "3"
-	// arr.Get(1).(*cbor.Array))                           // Empty Array
+	// arr.Get(0).(*cbor.PositiveInteger8).ValueAsUint8()) // ignore: blockFetch "3"
+	// arr.Get(1).(*cbor.Array))                           // ignore: Empty Array
 	slotNumber := arr.Get(2).(*cbor.Array).Get(0).(*cbor.Array).Get(0).(*cbor.PositiveInteger32).ValueAsUint32()
 	hash := arr.Get(2).(*cbor.Array).Get(0).(*cbor.Array).Get(1).(*cbor.ByteString).ValueAsBytes()
 	blockNumber := arr.Get(2).(*cbor.Array).Get(1).(*cbor.PositiveInteger32).ValueAsUint32()
+
+	// Step 3: Send the chainSyncMessageDone to terminate
+	chainSyncDone := cbor.NewArray()
+	chainSyncDone.Add(cbor.NewPositiveInteger(7)) // chainSyncMessageDone
+	_, err = c.queryNode(multiplex.MiniProtocolIDChainSyncBlocks, chainSyncDone)
+	if err != nil {
+		log.WithError(err).Error("Unexpected error received while terminating with chainSyncMessageDone")
+	}
 
 	return slotNumber, hash, blockNumber, nil
 }
@@ -103,12 +113,12 @@ func (c *Client) queryNode(miniProtocol multiplex.MiniProtocol, input *cbor.Arra
 
 	// Step 2: Transmit the request via socket
 	containerResponse, err := c.socket.Write(containerRequest.Bytes())
-	if err != nil {
+	if err != nil && err != io.EOF {
 		log.WithError(err).Error("Error writing to socket")
 		return nil, err
 	}
 	log.Trace("Multiplexed Response")
-	if log.IsLevelEnabled(log.TraceLevel) {
+	if log.IsLevelEnabled(log.TraceLevel) && containerResponse != nil {
 		fmt.Println(containerResponse.Debug())
 	}
 
