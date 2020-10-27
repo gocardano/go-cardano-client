@@ -42,7 +42,7 @@ time="2020-10-23T17:08:15-05:00" level=trace msg="Found another item in the arra
 time="2020-10-23T17:08:15-05:00" level=trace msg="Found another item in the array PositiveInteger8(1)"
 time="2020-10-23T17:08:15-05:00" level=trace msg="Found another item in the array PositiveInteger32(764824073)"
 time="2020-10-23T17:08:15-05:00" level=trace msg="Array of [3] length reached [3] items"
-time="2020-10-23T17:08:15-05:00" level=info msg="Shelley container has [1] CBOR encoded data items"
+time="2020-10-23T17:08:15-05:00" level=info msg="Shelley message has [1] CBOR encoded data items"
 time="2020-10-23T17:08:15-05:00" level=trace msg="Multiplexed Response"
 ==========================================================================================
 Header: Transmission Time: [1469005959], Mode: [1], Protocol ID: [0], Payload Length: [8]
@@ -80,7 +80,7 @@ time="2020-10-23T17:08:15-05:00" level=trace msg="Found another item in the arra
 time="2020-10-23T17:08:15-05:00" level=trace msg="Array of [2] length reached [2] items"
 time="2020-10-23T17:08:15-05:00" level=trace msg="Found another item in the array Array: [2]"
 time="2020-10-23T17:08:15-05:00" level=trace msg="Array of [3] length reached [3] items"
-time="2020-10-23T17:08:15-05:00" level=info msg="Shelley container has [1] CBOR encoded data items"
+time="2020-10-23T17:08:15-05:00" level=info msg="Shelley message has [1] CBOR encoded data items"
 time="2020-10-23T17:08:15-05:00" level=trace msg="Multiplexed Response"
 ==========================================================================================
 Header: Transmission Time: [1469012058], Mode: [1], Protocol ID: [5], Payload Length: [49]

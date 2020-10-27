@@ -52,7 +52,7 @@ func (s *UnixSocket) Close() error {
 }
 
 // Write the payload to the socket and return the result
-func (s *UnixSocket) Write(payload []byte) (*multiplex.Container, error) {
+func (s *UnixSocket) Write(payload []byte) (*multiplex.Message, error) {
 
 	////////////////////////////////////////////////////////////
 	// Step 1: Write to socket
@@ -120,5 +120,5 @@ func (s *UnixSocket) Write(payload []byte) (*multiplex.Container, error) {
 		"response": utils.DebugBytes(response),
 	}).Debugf("Successfully read %d bytes from socket", totalReadCount)
 
-	return multiplex.ParseContainerWithHeader(msgHeader, response)
+	return multiplex.ParseMessageWithHeader(msgHeader, response)
 }

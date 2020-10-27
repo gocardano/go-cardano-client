@@ -1,8 +1,8 @@
 package multiplex
 
-// Container represent a message envelope that is sent and receive
+// Message represent an envelope that is sent and receive
 // to/from the Shelley node.  It contains one or more segments as payload.
-// The following is the wire format of a container:
+// The following is the wire format of a message:
 //
 // +---------------------------------------------------------------+
 // |0|1|2|3|4|5|6|7|8|9|0|1|2|3|4|5|6|7|8|9|0|1|2|3|4|5|6|7|8|9|0|1|
@@ -16,7 +16,7 @@ package multiplex
 // |                                                               |
 // +---------------------------------------------------------------+
 //
-// Container header:
+// Message header:
 // - Transmission Time The transmission time is a time stamp based the wall clock
 //   of the peer with a resolution of one microsecond.
 // - Mini Protocol ID The unique ID of the mini protocol as in Table 3.2.
@@ -44,52 +44,52 @@ const (
 	newline = "\n"
 )
 
-// Container represents an envelope message to/from a Shelley node
-type Container struct {
+// Message represents an envelope message to/from a Shelley node
+type Message struct {
 	header    *Header
 	dataItems []cbor.DataItem
 }
 
-// NewContainer returns a new container
-func NewContainer(miniProtocol MiniProtocol, containerMode ContainerMode, array *cbor.Array) *Container {
-	return &Container{
-		header:    NewHeader(miniProtocol, containerMode, 0),
+// NewMessage returns a new message
+func NewMessage(miniProtocol MiniProtocol, messageMode MessageMode, array *cbor.Array) *Message {
+	return &Message{
+		header:    NewHeader(miniProtocol, messageMode, 0),
 		dataItems: []cbor.DataItem{array},
 	}
 }
 
-// DataItems returns the dataItems associated with this container
-func (c *Container) DataItems() []cbor.DataItem {
-	return c.dataItems
+// DataItems returns the dataItems associated with this message
+func (m *Message) DataItems() []cbor.DataItem {
+	return m.dataItems
 }
 
-// Header of this container
-func (c *Container) Header() *Header {
-	return c.header
+// Header of this message
+func (m *Message) Header() *Header {
+	return m.header
 }
 
-// Bytes returns the byte array for this container
-func (c *Container) Bytes() []byte {
-	payload := cbor.EncodeList(c.dataItems)
+// Bytes returns the byte array for this message
+func (m *Message) Bytes() []byte {
+	payload := cbor.EncodeList(m.dataItems)
 	payloadLength := len(payload)
 	if payloadLength > math.MaxUint16 {
 		log.WithFields(log.Fields{
 			"payloadLength": payloadLength,
-		}).Error("Payload length exceeded maximum limit in the container of math.MaxUint16")
+		}).Error("Payload length exceeded maximum limit in the message of math.MaxUint16")
 		return nil
 	}
-	c.header.update(uint16(len(payload)))
-	return append(c.header.Bytes(), payload...)
+	m.header.update(uint16(len(payload)))
+	return append(m.header.Bytes(), payload...)
 }
 
-// ParseContainerWithHeader uses the header and parses the byte array and return the container
-func ParseContainerWithHeader(header *Header, payload []byte) (*Container, error) {
+// ParseMessageWithHeader uses the header and parses the byte array and return the message
+func ParseMessageWithHeader(header *Header, payload []byte) (*Message, error) {
 
 	if int(header.PayloadLength()) != len(payload) {
 		log.WithFields(log.Fields{
 			"expectPayloadLength": header.PayloadLength(),
 			"actualPayloadLength": len(payload),
-		}).Error("Container header's payload length does not match actual payload length")
+		}).Error("Message header's payload length does not match actual payload length")
 		return nil, errors.NewError(errors.ErrShelleyPayloadInvalid)
 	}
 
@@ -102,16 +102,16 @@ func ParseContainerWithHeader(header *Header, payload []byte) (*Container, error
 		return nil, err
 	}
 
-	log.Infof("Shelley container has [%d] CBOR encoded data items", len(dataItems))
+	log.Infof("Shelley message has [%d] CBOR encoded data items", len(dataItems))
 
-	return &Container{
+	return &Message{
 		header:    header,
 		dataItems: dataItems,
 	}, nil
 }
 
-// ParseContainer parses the byte array and return the container (uses the first 8 bytes as the header)
-func ParseContainer(buf []byte) (*Container, error) {
+// ParseMessage parses the byte array and return the message (uses the first 8 bytes as the header)
+func ParseMessage(buf []byte) (*Message, error) {
 	if len(buf) < HeaderSize {
 		log.WithFields(log.Fields{
 			"messageLength": len(buf),
@@ -128,16 +128,16 @@ func ParseContainer(buf []byte) (*Container, error) {
 		return nil, err
 	}
 
-	return ParseContainerWithHeader(header, buf[8:])
+	return ParseMessageWithHeader(header, buf[8:])
 }
 
-// Debug returns a string representation of the messsage
-func (c *Container) Debug() string {
+// Debug returns a string representation of the message
+func (m *Message) Debug() string {
 
 	r := "==========================================================================================" + newline
-	r += "Header: " + c.header.String() + newline
+	r += "Header: " + m.header.String() + newline
 	r += "------------------------------------------------------------------------------------------" + newline
-	r += cbor.DebugList(c.dataItems)
+	r += cbor.DebugList(m.dataItems)
 	r += "=========================================================================================="
 
 	return r

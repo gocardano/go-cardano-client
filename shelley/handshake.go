@@ -81,11 +81,11 @@ func handshakeRequest() *cbor.Array {
 	return arr
 }
 
-func parseHandshakeResponse(c *multiplex.Container) (*handshakeResponse, error) {
+func parseHandshakeResponse(c *multiplex.Message) (*handshakeResponse, error) {
 
 	if !c.Header().IsFromResponder() {
-		log.WithField("mode", c.Header().ContainerMode()).Error("Expected container mode from responder")
-		return nil, errors.NewError(errors.ErrShelleyInvalidContainerMode)
+		log.WithField("mode", c.Header().MessageMode()).Error("Expected message mode from responder")
+		return nil, errors.NewError(errors.ErrShelleyInvalidMessageMode)
 	}
 
 	if len(c.DataItems()) != 1 && c.DataItems()[0].MajorType() != cbor.MajorTypeArray {
