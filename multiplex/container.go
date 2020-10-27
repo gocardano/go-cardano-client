@@ -110,19 +110,19 @@ func ParseContainerWithHeader(header *Header, payload []byte) (*Container, error
 	}, nil
 }
 
-// ParseContainer parses the byte array and return the container
+// ParseContainer parses the byte array and return the container (uses the first 8 bytes as the header)
 func ParseContainer(buf []byte) (*Container, error) {
-	if len(buf) < headerSize {
+	if len(buf) < HeaderSize {
 		log.WithFields(log.Fields{
 			"messageLength": len(buf),
 		}).Error("Message length below header minimum size")
 		return nil, errors.NewError(errors.ErrShelleyPayloadInvalid)
 	}
 
-	header, err := ParseHeader(buf[:headerSize])
+	header, err := ParseHeader(buf[:HeaderSize])
 	if err != nil {
 		log.WithFields(log.Fields{
-			"header": utils.DebugBytes(buf[:headerSize]),
+			"header": utils.DebugBytes(buf[:HeaderSize]),
 			"error":  err.Error(),
 		}).Error("Error parsing shelley payload header")
 		return nil, err

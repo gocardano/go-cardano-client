@@ -19,7 +19,8 @@ const (
 	// ContainerModeResponder indicates that this is from the responder
 	ContainerModeResponder ContainerMode = 1
 
-	headerSize = 8
+	// HeaderSize of a multiplex container
+	HeaderSize = 8
 )
 
 // Header wraps the ouroboros mux header
@@ -49,9 +50,9 @@ func (h *Header) update(payloadLength uint16) {
 // ParseHeader returns the shelley message header from an 8-byte array
 func ParseHeader(buf []byte) (*Header, error) {
 
-	if len(buf) != headerSize {
+	if len(buf) != HeaderSize {
 		log.WithFields(log.Fields{
-			"expectedLength": headerSize,
+			"expectedLength": HeaderSize,
 			"actualLength":   len(buf),
 		}).Error("Invalid message header length")
 		return nil, errors.NewError(errors.ErrMuxHeaderInvalidSize)

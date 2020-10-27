@@ -71,7 +71,7 @@ func (s *UnixSocket) Write(payload []byte) (*multiplex.Container, error) {
 	////////////////////////////////////////////////////////////
 	// Step 2: Read header: transmission time (4 bytes) + Mini Protocol ID (2 bytes) + Payload Length (2 bytes)
 	////////////////////////////////////////////////////////////
-	header := make([]byte, 8)
+	header := make([]byte, multiplex.HeaderSize)
 	readCount, err := s.connection.Read(header)
 	if err != nil && err != io.EOF {
 		log.WithError(err).Error("Error reading packet header of size 8 bytes")
