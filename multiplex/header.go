@@ -79,6 +79,11 @@ func (h *Header) MessageMode() MessageMode {
 	return h.mode
 }
 
+// MiniProtocol returns the mini protocol of this header
+func (h *Header) MiniProtocol() MiniProtocol {
+	return h.miniProtocol
+}
+
 // MiniProtocolID returns the mini protocol ID
 func (h *Header) MiniProtocolID() uint16 {
 	return uint16(h.miniProtocol)
@@ -87,6 +92,11 @@ func (h *Header) MiniProtocolID() uint16 {
 // PayloadLength returns the payload length
 func (h *Header) PayloadLength() uint16 {
 	return h.payloadLength
+}
+
+// PayloadLengthAsInt32 returns the payload length as int
+func (h *Header) PayloadLengthAsInt32() int {
+	return int(h.payloadLength)
 }
 
 // IsFromInitiator return boolean indicating if this message is from initiator

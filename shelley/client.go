@@ -42,6 +42,7 @@ func (c *Client) Handshake() error {
 	response, err := parseHandshakeResponse(messageResponse)
 	if err != nil {
 		log.WithError(err).Error("Error parsing handshake response from node")
+		return err
 	}
 
 	if response.accepted == false {
@@ -67,7 +68,7 @@ func (c *Client) QueryTip() (uint32, []byte, uint32, error) {
 	// Step 1: Send the chain sync request object
 	chainSyncRequest := cbor.NewArray()
 	chainSyncRequest.Add(cbor.NewPositiveInteger(0)) // msgRequestNext
-	messageResponse, err := c.queryNode(multiplex.MiniProtocolIDChainSyncBlocks, chainSyncRequest)
+	messageResponse, err := c.queryNode(multiplex.MiniProtocolIDChainSyncBlocks, []cbor.DataItem{chainSyncRequest})
 	if err != nil {
 		log.WithError(err).Error("Error parsing block fetch response from node")
 	}
@@ -93,7 +94,7 @@ func (c *Client) QueryTip() (uint32, []byte, uint32, error) {
 	// Step 3: Send the chainSyncMessageDone to terminate
 	chainSyncDone := cbor.NewArray()
 	chainSyncDone.Add(cbor.NewPositiveInteger(7)) // chainSyncMessageDone
-	_, err = c.queryNode(multiplex.MiniProtocolIDChainSyncBlocks, chainSyncDone)
+	_, err = c.queryNode(multiplex.MiniProtocolIDChainSyncBlocks, []cbor.DataItem{chainSyncDone})
 	if err != nil {
 		log.WithError(err).Error("Unexpected error received while terminating with chainSyncMessageDone")
 	}
@@ -102,23 +103,23 @@ func (c *Client) QueryTip() (uint32, []byte, uint32, error) {
 }
 
 // queryNode query the node given the input parameters
-func (c *Client) queryNode(miniProtocol multiplex.MiniProtocol, input *cbor.Array) (*multiplex.Message, error) {
+func (c *Client) queryNode(miniProtocol multiplex.MiniProtocol, dataItems []cbor.DataItem) (*multiplex.ServiceDataUnit, error) {
 
 	// Step 1: Create message for the request
-	messageRequest := multiplex.NewMessage(miniProtocol, multiplex.MessageModeInitiator, input)
-	log.Trace("Multiplexed Request")
+	sdu := multiplex.NewServiceDataUnit(miniProtocol, multiplex.MessageModeInitiator, dataItems)
 	if log.IsLevelEnabled(log.TraceLevel) {
-		fmt.Println(messageRequest.Debug())
+		log.Trace("Multiplexed Request:")
+		fmt.Println(sdu.Debug())
 	}
 
 	// Step 2: Transmit the request via socket
-	messageResponse, err := c.socket.Write(messageRequest.Bytes())
+	messageResponse, err := c.socket.Write(sdu.Bytes())
 	if err != nil && err != io.EOF {
 		log.WithError(err).Error("Error writing to socket")
 		return nil, err
 	}
-	log.Trace("Multiplexed Response")
 	if log.IsLevelEnabled(log.TraceLevel) && messageResponse != nil {
+		log.Trace("Multiplexed Response:")
 		fmt.Println(messageResponse.Debug())
 	}
 

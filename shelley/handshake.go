@@ -61,7 +61,7 @@ type handshakeResponse struct {
 	refuseReason  string
 }
 
-func handshakeRequest() *cbor.Array {
+func handshakeRequest() []cbor.DataItem {
 
 	// msgProposeVersions = [0, versionTable]
 	// versionTable =
@@ -78,17 +78,12 @@ func handshakeRequest() *cbor.Array {
 	versionTable.Add(cbor.NewPositiveInteger32(1), cbor.NewPositiveInteger(764824073))
 	versionTable.Add(cbor.NewPositiveInteger32(2), cbor.NewPositiveInteger(764824073))
 	versionTable.Add(cbor.NewPositiveInteger32(3), cbor.NewPositiveInteger(764824073))
-	return arr
+	return []cbor.DataItem{arr}
 }
 
-func parseHandshakeResponse(c *multiplex.Message) (*handshakeResponse, error) {
+func parseHandshakeResponse(sdu *multiplex.ServiceDataUnit) (*handshakeResponse, error) {
 
-	if !c.Header().IsFromResponder() {
-		log.WithField("mode", c.Header().MessageMode()).Error("Expected message mode from responder")
-		return nil, errors.NewError(errors.ErrShelleyInvalidMessageMode)
-	}
-
-	if len(c.DataItems()) != 1 && c.DataItems()[0].MajorType() != cbor.MajorTypeArray {
+	if len(sdu.DataItems()) != 1 && sdu.DataItems()[0].MajorType() != cbor.MajorTypeArray {
 		log.Error("Handshake response is expecting an array response with 3 items")
 		return nil, errors.NewError(errors.ErrShellyUnexpectedCborItem)
 	}
@@ -106,7 +101,7 @@ func parseHandshakeResponse(c *multiplex.Message) (*handshakeResponse, error) {
 	// refuseReasonHandshakeDecodeError = [1, versionNumber, tstr]
 	// refuseReasonRefused              = [2, versionNumber, tstr]
 
-	arr := c.DataItems()[0].(*cbor.Array)
+	arr := sdu.DataItems()[0].(*cbor.Array)
 	status := arr.Get(0).(*cbor.PositiveInteger8)
 
 	switch status.ValueAsUint8() {

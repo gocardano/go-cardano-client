@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	receivePacketSize = 512
+	networkUnix = "unix"
 )
 
 // UnixSocket wraps a unix socket connection
@@ -32,7 +32,7 @@ func NewUnixSocket(filename string, readTimeoutMs, writeTimeoutMs int) (*UnixSoc
 			"Socket [%s] not found", filename)
 	}
 
-	connection, err := net.Dial("unix", filename)
+	connection, err := net.Dial(networkUnix, filename)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (s *UnixSocket) Close() error {
 }
 
 // Write the payload to the socket and return the result
-func (s *UnixSocket) Write(payload []byte) (*multiplex.Message, error) {
+func (s *UnixSocket) Write(payload []byte) (*multiplex.ServiceDataUnit, error) {
 
 	////////////////////////////////////////////////////////////
 	// Step 1: Write to socket
@@ -67,58 +67,53 @@ func (s *UnixSocket) Write(payload []byte) (*multiplex.Message, error) {
 	log.Debugf("Successfully written [%d] bytes to socket", written)
 
 	s.connection.SetReadDeadline(time.Now().Add(time.Duration(s.readTimeoutMs) * time.Millisecond))
-
 	////////////////////////////////////////////////////////////
-	// Step 2: Read header: transmission time (4 bytes) + Mini Protocol ID (2 bytes) + Payload Length (2 bytes)
+	// Step 2: Read till EOF
 	////////////////////////////////////////////////////////////
-	header := make([]byte, multiplex.HeaderSize)
-	readCount, err := s.connection.Read(header)
-	if err != nil && err != io.EOF {
-		log.WithError(err).Error("Error reading packet header of size 8 bytes")
-		return nil, err
-	}
-	if readCount != 8 {
-		log.WithError(errors.NewMessageErrorf(errors.ErrSocketReceivedInvalidHeaderSize, "Expected: [%d] Actual: [%d];", 8, readCount))
-		return nil, err
+	response := []byte{}
+	for {
+
+		// Step 2a: Read header of 8 bytes to determine payload length
+		bytesHeader := make([]byte, multiplex.HeaderSize)
+		read, err := s.connection.Read(bytesHeader)
+		if err != nil {
+			log.WithError(err).Error("Error reading header of 8 bytes")
+			return nil, err
+		} else if read != multiplex.HeaderSize {
+			log.Errorf("Expecting to have read 8 bytes for header, but only read [%d] bytes", read)
+			return nil, errors.NewError(errors.ErrShelleyPayloadInvalid)
+		}
+
+		header, err := multiplex.ParseHeader(bytesHeader)
+		if err != nil {
+			log.WithError(err).Error("Parsed header is invalid")
+			return nil, errors.NewError(errors.ErrShelleyPayloadInvalid)
+		}
+
+		buf := make([]byte, header.PayloadLength())
+		read, err = s.connection.Read(buf)
+		if err != nil {
+			if err != io.EOF {
+				log.WithError(err).Error("Error reading from socket")
+			}
+			break
+		}
+		// log.Debugf("Read [%d] bytes, still in loop - %x", read, buf[:read])
+		response = append(response, header.Bytes()...)
+		response = append(response, buf[:read]...)
+
+		if int(header.PayloadLength()) != multiplex.MaxSDUSize {
+			log.Tracef("Breaking out of loop since read payload is not MaxSDUSize")
+			break
+		}
 	}
 
-	msgHeader, err := multiplex.ParseHeader(header)
+	log.WithField("responseLength", len(response)).Debug("Total read response bytes from socket")
+
+	sdus, err := multiplex.ParseServiceDataUnits(response)
 	if err != nil {
 		return nil, err
 	}
 
-	log.WithFields(log.Fields{
-		"transmissionTime": msgHeader.TransmissionTime(),
-		"protocolID":       msgHeader.MiniProtocolID(),
-		"payloadLength":    msgHeader.PayloadLength(),
-		"header":           utils.DebugBytes(header),
-	}).Debugf("Received response header")
-
-	////////////////////////////////////////////////////////////
-	// Step 3: Read packet of size payload length
-	////////////////////////////////////////////////////////////
-	response := []byte{}
-	tmp := make([]byte, receivePacketSize)
-	totalReadCount := 0
-	for totalReadCount < int(msgHeader.PayloadLength()) {
-		readCount, err := s.connection.Read(tmp)
-		if err != nil {
-			log.WithError(err).Error("Error reading from socket")
-			return nil, errors.NewMessageErrorf(errors.ErrSocketReadingFromSocket, "Error reading from socket [%s]", s.filename)
-		}
-		totalReadCount += int(readCount)
-		if readCount > 0 {
-			response = append(response, tmp[:readCount]...)
-		}
-		log.WithFields(log.Fields{
-			"readCount":      readCount,
-			"totalReadCount": totalReadCount,
-		}).Debug("Read packet")
-	}
-
-	log.WithFields(log.Fields{
-		"response": utils.DebugBytes(response),
-	}).Debugf("Successfully read %d bytes from socket", totalReadCount)
-
-	return multiplex.ParseMessageWithHeader(msgHeader, response)
+	return sdus[0], nil
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,8 +20,6 @@ func TestNegativeIntErrorCaseZeroOrPositive(t *testing.T) {
 }
 
 func TestNegativeInt(t *testing.T) {
-
-	log.SetLevel(log.DebugLevel)
 
 	testCases := []struct {
 		input  []byte
