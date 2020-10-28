@@ -26,6 +26,15 @@ const (
 	// MiniProtocolIDChainSyncBlocks available only for NtC (node to client)
 	MiniProtocolIDChainSyncBlocks MiniProtocol = 5
 
+	// MiniProtocolIDLocalTXSubmission local TX submission
+	MiniProtocolIDLocalTXSubmission MiniProtocol = 6
+
+	// MiniProtocolIDLocalStateQuery queries local state
+	MiniProtocolIDLocalStateQuery MiniProtocol = 7
+
+	// MiniProtocolIDKeepAlive keeps the connection alive
+	MiniProtocolIDKeepAlive MiniProtocol = 8
+
 	// MiniProtocolUnknown unknown protocol
 	MiniProtocolUnknown MiniProtocol = math.MaxUint16
 )
@@ -37,6 +46,9 @@ var miniProtocols = map[uint16]MiniProtocol{
 	uint16(MiniProtocolIDBlockFetch):            MiniProtocolIDBlockFetch,
 	uint16(MiniProtocolIDTransactionSubmission): MiniProtocolIDTransactionSubmission,
 	uint16(MiniProtocolIDChainSyncBlocks):       MiniProtocolIDChainSyncBlocks,
+	uint16(MiniProtocolIDLocalTXSubmission):     MiniProtocolIDLocalTXSubmission,
+	uint16(MiniProtocolIDLocalStateQuery):       MiniProtocolIDLocalStateQuery,
+	uint16(MiniProtocolIDKeepAlive):             MiniProtocolIDKeepAlive,
 }
 
 var miniProtocolNames = map[MiniProtocol]string{
@@ -46,6 +58,9 @@ var miniProtocolNames = map[MiniProtocol]string{
 	MiniProtocolIDBlockFetch:            "blockFetch",
 	MiniProtocolIDTransactionSubmission: "transactionSubmission",
 	MiniProtocolIDChainSyncBlocks:       "chainSyncBlocks",
+	MiniProtocolIDLocalTXSubmission:     "localTXSubmission",
+	MiniProtocolIDLocalStateQuery:       "localStateQuery",
+	MiniProtocolIDKeepAlive:             "keepAlive",
 }
 
 // miniProtocolFromBytes return the mini protocol given the value

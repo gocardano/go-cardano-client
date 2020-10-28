@@ -8,19 +8,19 @@ import (
 
 func TestNewHeader(t *testing.T) {
 
-	h := NewHeader(miniProtocolFromBytes(0x01), ContainerModeInitiator, 2)
+	h := NewHeader(miniProtocolFromBytes(0x01), MessageModeInitiator, 2)
 	assert.True(t, h.transmissionTime > 0)
 	assert.Equal(t, uint16(1), h.miniProtocol.Value())
-	assert.Equal(t, ContainerModeInitiator, h.ContainerMode())
+	assert.Equal(t, MessageModeInitiator, h.MessageMode())
 	assert.Equal(t, uint16(2), h.payloadLength)
 	assert.Equal(t, h.IsFromInitiator(), true)
 	assert.Equal(t, h.IsFromResponder(), false)
 	assert.True(t, len(h.String()) > 0)
 
-	h = NewHeader(miniProtocolFromBytes(0x01), ContainerModeResponder, 2)
+	h = NewHeader(miniProtocolFromBytes(0x01), MessageModeResponder, 2)
 	assert.True(t, h.transmissionTime > 0)
 	assert.Equal(t, uint16(1), h.miniProtocol.Value())
-	assert.Equal(t, ContainerModeResponder, h.ContainerMode())
+	assert.Equal(t, MessageModeResponder, h.MessageMode())
 	assert.Equal(t, uint16(2), h.payloadLength)
 	assert.Equal(t, h.IsFromInitiator(), false)
 	assert.Equal(t, h.IsFromResponder(), true)
@@ -44,7 +44,7 @@ func TestNewMessageHeaderFromBytes(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, header)
 	assert.Equal(t, uint32(1419086401), header.transmissionTime)
-	assert.Equal(t, ContainerModeInitiator, header.ContainerMode())
+	assert.Equal(t, MessageModeInitiator, header.MessageMode())
 	assert.Equal(t, uint16(0), header.miniProtocol.Value())
 	assert.Equal(t, uint16(25), header.payloadLength)
 
@@ -63,7 +63,7 @@ func TestMessageMode(t *testing.T) {
 	header, err := ParseHeader(bufInitiator)
 	assert.Nil(t, err)
 	assert.NotNil(t, header)
-	assert.Equal(t, ContainerModeInitiator, header.ContainerMode())
+	assert.Equal(t, MessageModeInitiator, header.MessageMode())
 
 	bufResponder := []byte{
 		0x00, 0x00, 0x00, 0x00, // timestamp
@@ -74,5 +74,5 @@ func TestMessageMode(t *testing.T) {
 	header, err = ParseHeader(bufResponder)
 	assert.Nil(t, err)
 	assert.NotNil(t, header)
-	assert.Equal(t, ContainerModeResponder, header.ContainerMode())
+	assert.Equal(t, MessageModeResponder, header.MessageMode())
 }

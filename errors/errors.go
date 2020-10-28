@@ -43,10 +43,10 @@ const (
 	ErrCborUnhandledReadBytesInTermsOfBits = 404
 	ErrCborBignumParsingFailed             = 405
 
-	ErrShelleyPayloadInvalid       = 501
-	ErrShelleyInvalidContainerMode = 502
-	ErrShellyUnexpectedCborItem    = 503
-	ErrShellyHandshakeFailed       = 504
+	ErrShelleyPayloadInvalid     = 501
+	ErrShelleyInvalidMessageMode = 502
+	ErrShellyUnexpectedCborItem  = 503
+	ErrShellyHandshakeFailed     = 504
 )
 
 var cliErrorMap = map[int]CLIError{
@@ -115,10 +115,10 @@ var cliErrorMap = map[int]CLIError{
 		code:     ErrShelleyPayloadInvalid,
 		desc:     "Shelley payload is invalid",
 	},
-	ErrShelleyInvalidContainerMode: {
+	ErrShelleyInvalidMessageMode: {
 		severity: ERROR,
-		code:     ErrShelleyInvalidContainerMode,
-		desc:     "Invalid container mode expected",
+		code:     ErrShelleyInvalidMessageMode,
+		desc:     "Invalid message mode expected",
 	},
 	ErrShellyUnexpectedCborItem: {
 		severity: ERROR,

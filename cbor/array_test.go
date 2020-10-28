@@ -3,13 +3,10 @@ package cbor
 import (
 	"testing"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestArray(t *testing.T) {
-
-	log.SetLevel(log.TraceLevel)
 
 	testCases := []struct {
 		scenario     string

@@ -1,7 +1,6 @@
 package cbor
 
 import (
-	"fmt"
 	"math"
 	"testing"
 
@@ -80,5 +79,4 @@ func TestDebug(t *testing.T) {
 
 	arr := NewArray()
 	arr.Add(m)
-	fmt.Println(DebugList([]DataItem{arr}))
 }
