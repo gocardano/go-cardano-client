@@ -66,6 +66,7 @@ func (c *Client) Handshake() error {
 func (c *Client) QueryTip() (uint32, []byte, uint32, error) {
 
 	// Step 1: Send the chain sync request object
+	log.Debug("Sending command: msgRequestNext")
 	chainSyncRequest := cbor.NewArray()
 	chainSyncRequest.Add(cbor.NewPositiveInteger(0)) // msgRequestNext
 	messageResponse, err := c.queryNode(multiplex.MiniProtocolIDChainSyncBlocks, []cbor.DataItem{chainSyncRequest})
@@ -92,6 +93,7 @@ func (c *Client) QueryTip() (uint32, []byte, uint32, error) {
 	blockNumber := arr.Get(2).(*cbor.Array).Get(1).(*cbor.PositiveInteger32).ValueAsUint32()
 
 	// Step 3: Send the chainSyncMessageDone to terminate
+	log.Debug("Sending command: chainSyncMessageDone")
 	chainSyncDone := cbor.NewArray()
 	chainSyncDone.Add(cbor.NewPositiveInteger(7)) // chainSyncMessageDone
 	_, err = c.queryNode(multiplex.MiniProtocolIDChainSyncBlocks, []cbor.DataItem{chainSyncDone})
@@ -115,8 +117,7 @@ func (c *Client) queryNode(miniProtocol multiplex.MiniProtocol, dataItems []cbor
 	// Step 2: Transmit the request via socket
 	messageResponse, err := c.socket.Write(sdu.Bytes())
 	if err != nil && err != io.EOF {
-		log.WithError(err).Error("Error writing to socket")
-		return nil, err
+		return nil, fmt.Errorf("Error writing to socket %w", err)
 	}
 	if log.IsLevelEnabled(log.TraceLevel) && messageResponse != nil {
 		log.Trace("Multiplexed Response:")
