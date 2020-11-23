@@ -8,7 +8,7 @@ GOLANG_IMAGE="golang:1.15.2"
 
 .PHONY: default fmt vet test coverage build
 
-default: container
+default: build
 
 fmt:
 	@echo ➭ Running go fmt
