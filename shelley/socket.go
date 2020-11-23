@@ -1,6 +1,7 @@
 package shelley
 
 import (
+	e "errors"
 	"io"
 	"net"
 	"time"
@@ -77,6 +78,11 @@ func (s *UnixSocket) Write(payload []byte) (*multiplex.ServiceDataUnit, error) {
 		bytesHeader := make([]byte, multiplex.HeaderSize)
 		read, err := s.connection.Read(bytesHeader)
 		if err != nil {
+			if e.Is(err, io.EOF) {
+				// nothing to read, no-op
+				log.Trace("EOF received on reading for response, nothing to read")
+				return nil, nil
+			}
 			log.WithError(err).Error("Error reading header of 8 bytes")
 			return nil, err
 		} else if read != multiplex.HeaderSize {
