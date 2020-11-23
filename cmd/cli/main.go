@@ -19,8 +19,9 @@ var version string = "-"
 func main() {
 
 	socketFilename := flag.String("socket", "", "Socket filename")
-	debug := flag.Bool("debug", false, "Enable debug/trace level logging")
 	showVersion := flag.Bool("version", false, "Display version information")
+	debug := flag.Bool("debug", false, "Enable debug level logging")
+	trace := flag.Bool("trace", false, "Enable trace level logging")
 
 	flag.Parse()
 
@@ -48,6 +49,9 @@ func main() {
 
 	log.SetLevel(log.ErrorLevel)
 	if *debug {
+		log.SetLevel(log.DebugLevel)
+	}
+	if *trace {
 		log.SetLevel(log.TraceLevel)
 	}
 
