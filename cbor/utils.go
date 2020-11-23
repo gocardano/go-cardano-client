@@ -35,6 +35,7 @@ func Debug(leadingSpace int, obj DataItem) string {
 		m := obj.(*Map).ValueAsMap()
 		for key, value := range m {
 			contents += fmt.Sprintf("%s- key: %+v / value: %+v\n", whitespace(leadingSpace+indent), key, value)
+			contents += Debug(leadingSpace+indent+indent, value)
 			count++
 		}
 		return whitespace(leadingSpace) + obj.String() + newline + contents
