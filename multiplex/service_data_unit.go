@@ -109,9 +109,8 @@ func (s *ServiceDataUnit) Bytes() []byte {
 // Debug returns a string representation of the message
 func (s *ServiceDataUnit) Debug() string {
 
-	r := "==========================================================================================" + newline
-	r += cbor.DebugList(s.dataItems)
-	r += "=========================================================================================="
+	r := cbor.DebugList(s.dataItems)
+	r += "============================================================================================"
 
 	return r
 }
