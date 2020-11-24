@@ -26,13 +26,44 @@ func NewClient(socketFilename string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Client{
+
+	client := &Client{
 		socket: socket,
-	}, nil
+	}
+
+	if err := client.handshake(); err != nil {
+		return nil, err
+	}
+
+	return client, nil
+}
+
+// Disconnect client from socket
+func (c *Client) Disconnect() error {
+	return c.socket.Close()
+}
+
+// Reset the socket by disconnecting and reconnecting
+func (c *Client) Reset() error {
+
+	if err := c.Disconnect(); err != nil {
+		return fmt.Errorf("Error trying to reset the shelley client %s", err)
+	}
+
+	socket, err := NewUnixSocket(c.socket.filename, defaultReadTimeoutMs, defaultWriteTimeoutMs)
+	if err == nil {
+		c.socket = socket
+	}
+
+	if err := c.handshake(); err != nil {
+		return err
+	}
+
+	return err
 }
 
 // Handshake negotiation with protocol version
-func (c *Client) Handshake() error {
+func (c *Client) handshake() error {
 
 	messageResponse, err := c.queryNode(multiplex.MiniProtocolIDMuxControl, handshakeRequest())
 	if err != nil {
@@ -60,6 +91,87 @@ func (c *Client) Handshake() error {
 	}).Debug("Handshake was successful")
 
 	return nil
+}
+
+// StakePools returns list of stake pools
+func (c *Client) StakePools(slotNumber uint32, hash []byte) (*multiplex.ServiceDataUnit, error) {
+
+	// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> R E Q U E S T   #     1 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	// MiniProtocol: 7   /   MessageMode: 0
+	// Array: [2]
+	//   PositiveInteger8(0)
+	//   Array: [2]
+	//     PositiveInteger32(14592398)
+	//     ByteString - Length: [32]; Value: [85575f65630abaab2bab1ab1171ff7baf3554986529877c168cb88cc36d6a945];
+	// ============================================================================================
+	// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< R E S P O N S E   #     1 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	// MiniProtocol: 7 / MessageMode: 1
+	// Array: [1]
+	//   PositiveInteger8(1)
+	// ============================================================================================
+
+	setBlockRequest := cbor.NewArrayWithItems([]cbor.DataItem{
+		cbor.NewPositiveInteger8(0),
+		cbor.NewArrayWithItems([]cbor.DataItem{
+			cbor.NewPositiveInteger32(slotNumber),
+			cbor.NewByteString(hash),
+		}),
+	})
+	setBlockResponse, err := c.queryNode(multiplex.MiniProtocolIDLocalStateQuery, []cbor.DataItem{setBlockRequest})
+	if err != nil {
+		log.WithError(err).Error("Error parsing block fetch response from node")
+		return nil, err
+	}
+	if setBlockResponse == nil {
+		return nil, fmt.Errorf("setBlockResponse was nil")
+	}
+
+	// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> R E Q U E S T   #     2 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	// MiniProtocol: 7   /   MessageMode: 0
+	// Array: [2]
+	//   PositiveInteger8(3)
+	//   Array: [2]
+	// 	   PositiveInteger8(0)
+	// 	   Array: [2]
+	// 	     PositiveInteger8(1)
+	// 	     Array: [1]
+	// 		   PositiveInteger8(5)
+	// ============================================================================================
+	stakePoolRequest := cbor.NewArrayWithItems([]cbor.DataItem{
+		cbor.NewPositiveInteger8(3),
+		cbor.NewArrayWithItems([]cbor.DataItem{
+			cbor.NewPositiveInteger8(0),
+			cbor.NewArrayWithItems([]cbor.DataItem{
+				cbor.NewPositiveInteger8(1),
+				cbor.NewArrayWithItems([]cbor.DataItem{
+					cbor.NewPositiveInteger8(5),
+				}),
+			}),
+		}),
+	})
+	sduStakePools, err := c.queryNode(multiplex.MiniProtocolIDLocalStateQuery, []cbor.DataItem{stakePoolRequest})
+	if err != nil {
+		log.WithError(err).Error("Error parsing block fetch response from node")
+		return nil, err
+	}
+
+	// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> R E Q U E S T   #     3 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	// MiniProtocol: 7   /   MessageMode: 0
+	// Array: [1]
+	//   PositiveInteger8(5)
+	// Array: [1]
+	//   PositiveInteger8(7)
+	// ============================================================================================
+
+	terminateRequest := []cbor.DataItem{
+		cbor.NewArrayWithItems([]cbor.DataItem{cbor.NewPositiveInteger8(5)}),
+		cbor.NewArrayWithItems([]cbor.DataItem{cbor.NewPositiveInteger8(7)}),
+	}
+	if _, err = c.queryNode(multiplex.MiniProtocolIDLocalStateQuery, terminateRequest); err != nil {
+		return nil, err
+	}
+
+	return sduStakePools, nil
 }
 
 // QueryTip returns the block header hash (slotNumber, string, blockNumber, error)
@@ -109,25 +221,22 @@ func (c *Client) queryNode(miniProtocol multiplex.MiniProtocol, dataItems []cbor
 
 	// Step 1: Create message for the request
 	sdu := multiplex.NewServiceDataUnit(miniProtocol, multiplex.MessageModeInitiator, dataItems)
-	if log.IsLevelEnabled(log.TraceLevel) {
-		log.Trace("Multiplexed Request:")
+	if log.IsLevelEnabled(log.DebugLevel) {
+		log.Debug("Multiplexed Request:")
+		fmt.Println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> R E Q U E S T >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
 		fmt.Println(sdu.Debug())
 	}
 
-	// Step 2: Transmit the request via socket
+	// Step 2: Send the request
 	messageResponse, err := c.socket.Write(sdu.Bytes())
 	if err != nil && err != io.EOF {
 		return nil, fmt.Errorf("Error writing to socket %w", err)
 	}
-	if log.IsLevelEnabled(log.TraceLevel) && messageResponse != nil {
-		log.Trace("Multiplexed Response:")
+	if log.IsLevelEnabled(log.DebugLevel) && messageResponse != nil {
+		log.Debug("Multiplexed Response:")
+		fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< R E S P O N S E <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
 		fmt.Println(messageResponse.Debug())
 	}
 
 	return messageResponse, nil
-}
-
-// Disconnect client from socket
-func (c *Client) Disconnect() error {
-	return c.socket.Close()
 }

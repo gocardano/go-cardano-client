@@ -75,15 +75,16 @@ func handshakeRequest() []cbor.DataItem {
 	versionTable := cbor.NewMap()
 	arr.Add(versionTable)
 
-	versionTable.Add(cbor.NewPositiveInteger32(1), cbor.NewPositiveInteger(764824073))
-	versionTable.Add(cbor.NewPositiveInteger32(2), cbor.NewPositiveInteger(764824073))
-	versionTable.Add(cbor.NewPositiveInteger32(3), cbor.NewPositiveInteger(764824073))
+	versionTable.Add(cbor.NewPositiveInteger8(1), cbor.NewPositiveInteger(764824073))
+	versionTable.Add(cbor.NewPositiveInteger16(32770), cbor.NewPositiveInteger(764824073))
+	versionTable.Add(cbor.NewPositiveInteger16(32771), cbor.NewPositiveInteger(764824073))
+
 	return []cbor.DataItem{arr}
 }
 
 func parseHandshakeResponse(sdu *multiplex.ServiceDataUnit) (*handshakeResponse, error) {
 
-	if len(sdu.DataItems()) != 1 && sdu.DataItems()[0].MajorType() != cbor.MajorTypeArray {
+	if sdu == nil || len(sdu.DataItems()) != 1 && sdu.DataItems()[0].MajorType() != cbor.MajorTypeArray {
 		log.Error("Handshake response is expecting an array response with 3 items")
 		return nil, errors.NewError(errors.ErrShellyUnexpectedCborItem)
 	}
@@ -108,7 +109,7 @@ func parseHandshakeResponse(sdu *multiplex.ServiceDataUnit) (*handshakeResponse,
 	case handshakeMessageAccept:
 		response = &handshakeResponse{
 			accepted:      true,
-			versionNumber: arr.Get(1).(*cbor.PositiveInteger8).ValueAsUint16(),
+			versionNumber: arr.Get(1).(*cbor.PositiveInteger16).ValueAsUint16(),
 			extraParams:   arr.Get(2).(*cbor.PositiveInteger32).ValueAsUint32(),
 		}
 		break

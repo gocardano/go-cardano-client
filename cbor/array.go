@@ -18,11 +18,16 @@ type Array struct {
 
 // NewArray returns instance of array data items
 func NewArray() *Array {
+	return NewArrayWithItems([]DataItem{})
+}
+
+// NewArrayWithItems returns instance of array data items
+func NewArrayWithItems(items []DataItem) *Array {
 	return &Array{
 		baseDataItem: baseDataItem{
 			majorType: MajorTypeArray,
 		},
-		V: []DataItem{},
+		V: items,
 	}
 }
 
