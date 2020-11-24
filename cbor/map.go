@@ -3,6 +3,7 @@ package cbor
 import (
 	"fmt"
 	"math"
+	"sort"
 )
 
 // Map wraps a CBOR map
@@ -80,9 +81,16 @@ func (m *Map) doEncodeCBOR(fixedLength bool) []byte {
 		result = []byte{MajorTypeMap.EncodeCBOR() | additionalTypeIndefinite}
 	}
 
-	for key, value := range m.m {
+	keys := []DataItem{}
+	for key := range m.m {
+		keys = append(keys, key)
+	}
+	keySorter := NewDataItemSorter(keys)
+	sort.Sort(keySorter)
+
+	for _, key := range keys {
 		result = append(result, key.(DataItem).EncodeCBOR()...)
-		result = append(result, value.(DataItem).EncodeCBOR()...)
+		result = append(result, m.m[key].(DataItem).EncodeCBOR()...)
 	}
 
 	if !fixedLength {

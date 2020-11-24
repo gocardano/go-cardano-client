@@ -74,9 +74,11 @@ func (s *UnixSocket) Write(payload []byte) (*multiplex.ServiceDataUnit, error) {
 	response := []byte{}
 	for {
 
-		// Step 2a: Read header of 8 bytes to determine payload length
+		////////////////////////////////////////////////////////////
+		// Step 2a: Read 8 bytes header to determine payload length
+		////////////////////////////////////////////////////////////
 		bytesHeader := make([]byte, multiplex.HeaderSize)
-		read, err := s.connection.Read(bytesHeader)
+		readBytes, err := s.connection.Read(bytesHeader)
 		if err != nil {
 			if e.Is(err, io.EOF) {
 				// nothing to read, no-op
@@ -85,8 +87,8 @@ func (s *UnixSocket) Write(payload []byte) (*multiplex.ServiceDataUnit, error) {
 			}
 			log.WithError(err).Error("Error reading header of 8 bytes")
 			return nil, err
-		} else if read != multiplex.HeaderSize {
-			log.Errorf("Expecting to have read 8 bytes for header, but only read [%d] bytes", read)
+		} else if readBytes != multiplex.HeaderSize {
+			log.Errorf("Expecting to have read 8 bytes for header, but only read [%d] bytes", readBytes)
 			return nil, errors.NewError(errors.ErrShelleyPayloadInvalid)
 		}
 
@@ -95,21 +97,36 @@ func (s *UnixSocket) Write(payload []byte) (*multiplex.ServiceDataUnit, error) {
 			log.WithError(err).Error("Parsed header is invalid")
 			return nil, errors.NewError(errors.ErrShelleyPayloadInvalid)
 		}
-
-		buf := make([]byte, header.PayloadLength())
-		read, err = s.connection.Read(buf)
-		if err != nil {
-			if err != io.EOF {
-				log.WithError(err).Error("Error reading from socket")
-			}
-			break
-		}
-		// log.Debugf("Read [%d] bytes, still in loop - %x", read, buf[:read])
 		response = append(response, header.Bytes()...)
-		response = append(response, buf[:read]...)
+
+		////////////////////////////////////////////////////////////
+		// Step 2b: Reading until entire payload has been read
+		////////////////////////////////////////////////////////////
+
+		totalReadBytes := 0
+		for totalReadBytes < header.PayloadLengthAsInt32() {
+			buf := make([]byte, header.PayloadLengthAsInt32()-totalReadBytes)
+			readBytes, err = s.connection.Read(buf)
+			if err != nil {
+				if err != io.EOF {
+					log.WithError(err).Error("Error reading from socket")
+				}
+				break
+			}
+
+			log.WithFields(log.Fields{
+				"expectedPayloadLength": header.PayloadLength(),
+				"readBytes":             readBytes,
+				"totalReadBytes":        totalReadBytes,
+			}).Trace("Received CBOR data")
+
+			response = append(response, buf[:readBytes]...)
+			totalReadBytes += readBytes
+		}
 
 		if int(header.PayloadLength()) != multiplex.MaxSDUSize {
-			log.Tracef("Breaking out of loop since read payload is not MaxSDUSize")
+			log.WithField("headerPayloadLength", header.PayloadLength()).
+				Trace("Breaking out of loop since read payload is not MaxSDUSize")
 			break
 		}
 	}

@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gocardano/go-cardano-client/shelley"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -69,12 +70,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = client.Handshake()
-	if err != nil {
-		log.WithError(err).Error("Error negotiating handshake protocol")
-		os.Exit(1)
-	}
-
+	//////////////////////////////////////////////////////////////////////
+	// QUERY TIP
+	//////////////////////////////////////////////////////////////////////
 	slotNumber, hash, blockNumber, err := client.QueryTip()
 	if err != nil {
 		log.WithError(err).Error("Error querying tip block header hash")
@@ -83,6 +81,17 @@ func main() {
 	fmt.Println("SlotNumber  : ", slotNumber)
 	fmt.Println("Hash        : ", fmt.Sprintf("%x", hash))
 	fmt.Println("BlockNumber : ", blockNumber)
+
+	if err = client.Reset(); err != nil {
+		log.WithError(err).Error("Error resetting connection")
+		os.Exit(1)
+	}
+
+	//////////////////////////////////////////////////////////////////////
+	// QUERY STAKE POOL
+	//////////////////////////////////////////////////////////////////////
+	s, err := client.StakePools(slotNumber, hash)
+	fmt.Println(s, err)
 
 	// Disconnect
 	err = client.Disconnect()
